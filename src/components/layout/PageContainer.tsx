@@ -4,12 +4,10 @@ import {
 } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
 import clsx from 'clsx';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { IoIosEye } from 'react-icons/io';
-import { useParams } from 'react-router-dom';
 
-import type { Board } from '@/@types/Board';
-import { fetchBoards } from '@/data/data';
+import { useBoard } from '@/contexts/KanbanContext';
 
 import Header from './Header';
 import Navbar from './Navbar';
@@ -20,19 +18,9 @@ function PageContainer({
   children: React.ReactNode
 }): React.ReactNode {
   const [opened, { toggle }] = useDisclosure();
-  const [boards, setBoards] = React.useState<Board[] | null>(null);
-  const matches = useMediaQuery('(max-width: 475px)');
-  const { id } = useParams<{ id: string }>();
-  const board = useMemo(() => (
-    boards?.find((_board) => _board.id === id)
-  ), [boards, id]);
+  const { board, boards, boardId } = useBoard();
 
-  React.useEffect(() => {
-    fetchBoards().then((data) => {
-      setBoards(data);
-      console.log(data);
-    });
-  }, []);
+  const matches = useMediaQuery('(max-width: 475px)');
   return (
     <AppShell
       p={0}
@@ -40,7 +28,7 @@ function PageContainer({
       className=""
       navbar={{
         width: '260px',
-        breakpoint: 'md',
+        breakpoint: 'xs',
         collapsed: {
           mobile: matches,
           desktop: opened,
@@ -61,7 +49,7 @@ function PageContainer({
       >
         <Navbar
           boards={boards}
-          id={id}
+          id={boardId}
           toggle={toggle}
         />
       </AppShell.Navbar>

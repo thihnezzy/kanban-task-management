@@ -12,6 +12,7 @@ import React, { useMemo } from 'react';
 import { HiOutlineChevronDown } from 'react-icons/hi';
 
 import type { Task } from '@/@types/Task';
+import { useBoard } from '@/contexts/KanbanContext';
 
 import ModalConfirmation from '../ModalConfirmation/ModalConfirmation';
 import ModalEditTask from '../ModalEditTask/ModalEditTask';
@@ -19,6 +20,7 @@ import ModalEditTask from '../ModalEditTask/ModalEditTask';
 import DropdownMenu from './DropdownMenu/DropdownMenu';
 
 interface ModalTaskViewProps {
+
   item: Task;
   opened: boolean;
   onClose: () => void;
@@ -30,17 +32,19 @@ const checkboxClassNames = {
   checkboxWrapper: 'border border-solid border-light-grey dark:border-dark-grey',
 };
 
-// TODO: Status base on the title's column
-const statusOptions = [
-  { value: 'Todo', label: 'To Do' },
-  { value: 'Doing', label: 'In Progress' },
-  { value: 'Done', label: 'Done' },
-];
-
 function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement {
+  const { board, setBoard } = useBoard();
+  const statusOptions = useMemo(() => {
+    const boardStatuses = board?.columns.map((column) => ({
+      value: column.id,
+      label: column.name,
+    })) ?? [];
+    return boardStatuses;
+  }, [board?.columns]);
   const { item, opened, onClose } = props;
   const [modalEditTaskOpened, { open: openModalEditTask, close: closeModalEditTask }] = useDisclosure(false);
   const [modalDeleteTaskOpened, { open: openModalDeleteTask, close: closeModalDeleteTask }] = useDisclosure(false);
+  const [currentStatus, setCurrentStatus] = React.useState<string | null>(() => item.status);
   const [task, setTask] = React.useState<Task>(() => item);
   const completedSubtasks = useMemo(() => task.subtasks.filter((subtask) => subtask.isCompleted).length, [task.subtasks]);
   const handleStatusChange = (isChecked: boolean, subtaskId: string) => {
@@ -53,12 +57,11 @@ function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement 
       subtasks: [...newSubtasks],
     }));
   };
-  const onChangeStatus = (value: string | null) => {
-    // TODO: BACKEND - Update task status
-    console.log(value);
+  const onChangeStatus = (columnId: string) => {
+    setCurrentStatus(columnId);
     setTask((current) => ({
       ...current,
-      status: value || 'Todo',
+      status: columnId,
     }));
   };
   return (
@@ -121,7 +124,7 @@ function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement 
           </Title>
           <Select
             data={statusOptions}
-            value={task.status}
+            value={currentStatus}
             placeholder="Select status"
             className="mt-2"
             classNames={{

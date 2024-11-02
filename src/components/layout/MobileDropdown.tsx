@@ -18,7 +18,7 @@ interface MobileDropdownProps {
 
 function MobileDropdown(props: MobileDropdownProps): React.ReactElement {
   const {
-    boards, matches, id, open,
+    boards, matches, id, open: openAddNewBoard,
   } = props;
   const [menuOpened, { close, open: openMenu }] = useDisclosure(false);
 
@@ -56,7 +56,7 @@ function MobileDropdown(props: MobileDropdownProps): React.ReactElement {
             id={id}
             open={() => {
               close();
-              open();
+              openAddNewBoard();
             }}
           />
           <div className="px-4">

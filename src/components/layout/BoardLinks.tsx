@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { Board } from '@/@types/Board';
 
 interface BoardLinksProps {
-  boards: Board[] | null;
+  boards: Board[] | undefined;
   id: string | undefined;
   open: () => void;
 }

@@ -12,7 +12,7 @@ import ModalAddNewBoard from '../modals/ModalAddNewBoard/ModalAddNewBoard';
 import BoardLinks from './BoardLinks';
 
 interface NavbarProps {
-  boards: Board[] | null;
+  boards: Board[] | undefined;
   id: string | undefined;
   toggle: () => void;
 }

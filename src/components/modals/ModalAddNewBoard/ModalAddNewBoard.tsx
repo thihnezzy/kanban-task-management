@@ -9,6 +9,8 @@ import { useForm } from '@mantine/form';
 import React from 'react';
 import { HiOutlineX } from 'react-icons/hi';
 
+// import { createBoard, fetchBoards } from '@/services/boardService';
+
 interface ModalAddNewBoardProps {
   opened: boolean;
   onClose: () => void;
@@ -24,6 +26,7 @@ const inputClassNames = {
 
 function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactElement {
   const { opened, onClose } = props;
+  const [isLoading, setLoading] = React.useState(false);
   const form = useForm({
     initialValues: {
       title: '',
@@ -69,8 +72,15 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
       <Modal.Body>
         <form
           className="space-y-4"
-          onSubmit={form.onSubmit((values) => {
-            console.log(values);
+          onSubmit={form.onSubmit(async (values) => {
+            setLoading(true);
+            // const newBoard = await createBoard({
+            //   name: values.title,
+            //   columns: values.columns,
+            // });
+            setLoading(false);
+            form.reset();
+            onClose();
           })}
         >
           <TextInput
@@ -125,7 +135,7 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
                 hover:bg-opacity-25 hover:bg-purple-primary rounded-full duration-100
                 font-bold text-purple-primary hover:text-purple-primary"
               >
-                + Add New Board
+                + Add New Column
               </Button>
             </Stack>
           </div>
@@ -133,6 +143,8 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
             type="submit"
             variant="filled"
             className="w-full bg-purple-primary hover:bg-purple-secondary rounded-full duration-100 font-bold text-white text-sm outline-none focus:outline-none"
+            loading={isLoading}
+            disabled={isLoading}
           >
             Create New Board
           </Button>
