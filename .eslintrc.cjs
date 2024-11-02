@@ -9,6 +9,7 @@ module.exports = {
     "eslint:recommended",
     "airbnb/hooks",
     "airbnb",
+    "plugin:@tanstack/query/recommended"
   ],
   ignorePatterns: [
     'dist', 
@@ -39,8 +40,10 @@ module.exports = {
     'react-refresh',
     "react",
     "@typescript-eslint",
+    "@tanstack/query",
   ],
   rules: {
+    "@tanstack/query/exhaustive-deps": "error",
     "@typescript-eslint/no-unused-vars": ["error"],
     "import/order": [
       "error",

@@ -3,7 +3,7 @@ import { createTheme } from '@mantine/core';
 const theme = createTheme({
   white: '#FFFFFF',
   breakpoints: {
-    xs: '375px',
+    xs: '376px',
     sm: '640px',
     md: '768px',
     lg: '1024px',

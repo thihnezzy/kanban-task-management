@@ -5,14 +5,11 @@ import {
 import {
   Box, Button, Text,
 } from '@mantine/core';
-import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { memo } from 'react';
 
-import type { Board } from '@/@types/Board';
+import { useBoard } from '@/contexts/KanbanContext';
 import insertItemAt from '@/util/insertItemAt';
 import reorder from '@/util/reorder';
-
-import { fetchBoardById, updateBoard } from '../../data/data';
 
 import Column from './Column';
 
@@ -42,30 +39,15 @@ function SprintBoard({
   className,
 }: {
   className?: string;
-}) {
-  const [board, setBoard] = React.useState<Board | null>(null);
-  const { id } = useParams<{ id: string }>();
-  useEffect(() => {
-    if (!id) return;
-    fetchBoardById(id).then((data) => {
-      setBoard(data);
-    });
-  }, [id]);
+}): React.ReactElement {
+  const { board, setBoard } = useBoard();
   const onClickNewColumn = () => {
   };
-  /**
-v columns: Array(3)
-> 0:{id: 'board-1-column-1', name: 'Todo', tasks: Array(4)}
-> 1:{id: 'board-1-column-2', name: 'Doing', tasks: Array(6)}
-> 2:{id: 'board-1-column-3', name: 'Done', tasks: Array(14)}
- */
   const onDragEnd = (result: DropResult) => {
     const {
       destination, source,
     } = result;
     if (!destination || !source || !board) return;
-    console.log('source', source);
-    console.log('destination', destination);
     if (destination.droppableId === source.droppableId && destination.droppableId !== 'board') {
       const columnIndex = board.columns.findIndex((column) => column.id === source.droppableId);
       // Reorder tasks in a column
@@ -83,7 +65,7 @@ v columns: Array(3)
         }),
       };
       setBoard(newBoard);
-      updateBoard(newBoard);
+      // updateBoard(newBoard);
     }
     // Reorder columns
     if (destination.droppableId === source.droppableId && source.droppableId === 'board') {
@@ -93,7 +75,7 @@ v columns: Array(3)
         columns: newColumns,
       };
       setBoard(newBoard);
-      updateBoard(newBoard);
+      // updateBoard(newBoard);
     }
     // Move task to another column
     if (destination.droppableId !== source.droppableId && source.droppableId !== 'board') {
@@ -123,14 +105,13 @@ v columns: Array(3)
         }),
       };
       setBoard(newBoard);
-      updateBoard(newBoard);
+      // updateBoard(newBoard);
     }
   };
-
   return (
     <div className={className}>
       {
-        !board && (
+        board && board.columns.length === 0 && (
           <EmptyState onClickNewColumn={onClickNewColumn} />
         )
       }
@@ -162,7 +143,8 @@ v columns: Array(3)
                     >
                       <Column
                         className="py-4"
-                        column={column}
+                        columnId={column.id}
+                        // column={column}
                       />
                     </div>
                   )}
@@ -177,4 +159,4 @@ v columns: Array(3)
   );
 }
 
-export default SprintBoard;
+export default memo(SprintBoard);

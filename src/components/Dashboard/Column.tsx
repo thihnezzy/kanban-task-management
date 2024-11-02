@@ -5,10 +5,12 @@ import {
 import {
   Box, ColorSwatch, Text,
 } from '@mantine/core';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import React, { memo } from 'react';
 
 import type { Column } from '@/@types/Column';
+import queryFunctions from '@/services/queryFunctions';
 
 import TaskItem from './TaskItem';
 
@@ -33,7 +35,6 @@ function ColumnHeader(props: ColumnHeaderProps): React.ReactElement {
     </div>
   );
 }
-
 const InnerList = memo(({ items } : { items: Column['tasks'] }) => (
   <div className="w-[280px] text-wrap space-y-4 max-h-[calc(100dvh-170px)] overflow-y-auto">
     {items.map((item, index) => (
@@ -55,11 +56,19 @@ const InnerList = memo(({ items } : { items: Column['tasks'] }) => (
 
 function SprintColumn({
   className,
-  column,
+  // column,
+  columnId,
 }: {
   className?: string;
-  column: Column;
+  // column: Column;
+  columnId: string;
 }): React.ReactElement {
+  const { data: column } = useQuery<Column, Error>({
+    queryKey: ['column', columnId],
+    queryFn: () => queryFunctions({ url: `/columns/${columnId}` }),
+    enabled: !!columnId,
+  });
+  if (!column) return <div />;
   return (
     <div className={`${className} space-y-4`}>
       <ColumnHeader

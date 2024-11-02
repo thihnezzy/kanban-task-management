@@ -4,19 +4,17 @@ import {
   Modal, Select, Stack, Textarea, TextInput, Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import React from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect, useMemo } from 'react';
 import { HiOutlineChevronDown, HiOutlineX } from 'react-icons/hi';
+
+import { useBoard } from '@/contexts/KanbanContext';
+import { createTask } from '@/services/boardService';
 
 interface ModalAddNewTaskProps {
   opened: boolean;
   onClose: () => void;
 }
-
-const statusOptions = [
-  { value: 'Todo', label: 'To Do' },
-  { value: 'Doing', label: 'In Progress' },
-  { value: 'Done', label: 'Done' },
-];
 
 const inputClassNames = {
   root: 'relative',
@@ -27,13 +25,39 @@ const inputClassNames = {
 };
 
 function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElement {
+  const {
+    board, boardId,
+  } = useBoard();
+  const queryClient = useQueryClient();
   const { opened, onClose } = props;
+  const addNewTask = useMutation({
+    mutationFn: createTask,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['board', boardId],
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['board', boardId],
+      });
+      onClose();
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+  const statusOptions = useMemo(() => {
+    const boardStatuses = board?.columns.map((column) => ({
+      value: column.id,
+      label: column.name,
+    })) ?? [];
+    return boardStatuses;
+  }, [board?.columns]);
   const form = useForm({
     initialValues: {
       title: '',
       description: '',
       subtasks: [''],
-      status: 'Todo',
+      status: '',
     },
 
     validate: {
@@ -57,6 +81,10 @@ function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElem
       },
     },
   });
+  useEffect(() => {
+    form.setFieldValue('status', statusOptions[0]?.value);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusOptions]);
   return (
     <Modal
       withCloseButton={false}
@@ -75,9 +103,15 @@ function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElem
       <Modal.Body>
         <form
           className="space-y-4"
-          // onSubmit={form.onSubmit((values) => {
-          //   addNewTask({})
-          // })}
+          onSubmit={form.onSubmit(async (values) => {
+            if (!boardId || addNewTask.isPending) return;
+            addNewTask.mutate({
+              columnId: values.status, // columnId
+              title: values.title,
+              description: values.description,
+              subtasks: values.subtasks,
+            });
+          })}
         >
           <TextInput
             placeholder="Task title"
@@ -160,6 +194,7 @@ function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElem
             type="submit"
             variant="filled"
             className="w-full bg-purple-primary hover:bg-purple-secondary rounded-full duration-100 font-bold text-white text-sm focus:outline-none"
+            loading={addNewTask.isPending}
           >
             Create Task
           </Button>
