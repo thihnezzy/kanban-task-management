@@ -5,12 +5,10 @@ import {
 import {
   Box, ColorSwatch, Text,
 } from '@mantine/core';
-import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import React, { memo } from 'react';
+import React from 'react';
 
 import type { Column } from '@/@types/Column';
-import queryFunctions from '@/services/queryFunctions';
 
 import TaskItem from './TaskItem';
 
@@ -35,39 +33,36 @@ function ColumnHeader(props: ColumnHeaderProps): React.ReactElement {
     </div>
   );
 }
-const InnerList = memo(({ items } : { items: Column['tasks'] }) => (
-  <div className="w-[280px] text-wrap space-y-4 max-h-[calc(100dvh-170px)] overflow-y-auto">
-    {items.map((item, index) => (
-      <Draggable
-        key={item.id}
-        draggableId={item.id}
-        index={index}
-      >
-        {(dragProvided) => (
-          <TaskItem
-            item={item}
-            dragProvided={dragProvided}
-          />
-        )}
-      </Draggable>
-    ))}
-  </div>
-));
+function InnerList({ items } : { items: Column['tasks'] }) {
+  return (
+    <div className="w-[280px] text-wrap space-y-4 max-h-[calc(100dvh-170px)] overflow-y-auto">
+      {items.map((item, index) => (
+        <Draggable
+          key={item.id}
+          draggableId={item.id}
+          index={index}
+        >
+          {(dragProvided) => (
+            <TaskItem
+              item={item}
+              dragProvided={dragProvided}
+            />
+          )}
+        </Draggable>
+      ))}
+    </div>
+  );
+}
 
 function SprintColumn({
   className,
-  // column,
-  columnId,
+  column,
+  // columnId,
 }: {
   className?: string;
-  // column: Column;
-  columnId: string;
+  column: Column;
+  // columnId: string;
 }): React.ReactElement {
-  const { data: column } = useQuery<Column, Error>({
-    queryKey: ['column', columnId],
-    queryFn: () => queryFunctions({ url: `/columns/${columnId}` }),
-    enabled: !!columnId,
-  });
   if (!column) return <div />;
   return (
     <div className={`${className} space-y-4`}>

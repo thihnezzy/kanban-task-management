@@ -7,12 +7,14 @@ import {
   Title,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { HiOutlineChevronDown } from 'react-icons/hi';
 
 import type { Task } from '@/@types/Task';
 import { useBoard } from '@/contexts/KanbanContext';
+import { deleteTask, updateTask } from '@/services/boardService';
 
 import ModalConfirmation from '../ModalConfirmation/ModalConfirmation';
 import ModalEditTask from '../ModalEditTask/ModalEditTask';
@@ -33,7 +35,32 @@ const checkboxClassNames = {
 };
 
 function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement {
-  const { board, setBoard } = useBoard();
+  const { item, opened, onClose } = props;
+  const { board, boardId } = useBoard();
+  const queryClient = useQueryClient();
+  const deleteCurrentTask = useMutation({
+    mutationFn: deleteTask,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['board', boardId],
+      });
+      onClose();
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+  const updateCurrentTask = useMutation({
+    mutationFn: updateTask,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['board', boardId],
+      });
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
   const statusOptions = useMemo(() => {
     const boardStatuses = board?.columns.map((column) => ({
       value: column.id,
@@ -41,14 +68,18 @@ function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement 
     })) ?? [];
     return boardStatuses;
   }, [board?.columns]);
-  const { item, opened, onClose } = props;
   const [modalEditTaskOpened, { open: openModalEditTask, close: closeModalEditTask }] = useDisclosure(false);
   const [modalDeleteTaskOpened, { open: openModalDeleteTask, close: closeModalDeleteTask }] = useDisclosure(false);
-  const [currentStatus, setCurrentStatus] = React.useState<string | null>(() => item.status);
+  const [currentStatus, setCurrentStatus] = React.useState<string | null>(() => item.column);
   const [task, setTask] = React.useState<Task>(() => item);
-  const completedSubtasks = useMemo(() => task.subtasks.filter((subtask) => subtask.isCompleted).length, [task.subtasks]);
+  const completedSubtasks = task.subtasks.filter((subtask) => subtask.isCompleted).length;
+
+  useEffect(() => {
+    setTask(item);
+  }, [item]);
+
   const handleStatusChange = (isChecked: boolean, subtaskId: string) => {
-    // TODO: BACKEND - Update subtask status
+    if (updateCurrentTask.isPending || !currentStatus) return;
     const newSubtasks = task.subtasks.map((subtask) => (
       subtask.id === subtaskId ? { ...subtask, isCompleted: Boolean(!isChecked) } : { ...subtask }
     ));
@@ -56,13 +87,34 @@ function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement 
       ...current,
       subtasks: [...newSubtasks],
     }));
+    updateCurrentTask.mutate({
+      taskId: task.id,
+      data: {
+        subtasks: newSubtasks,
+        columnId: currentStatus,
+        description: task.description,
+        title: task.title,
+      },
+    });
   };
-  const onChangeStatus = (columnId: string) => {
+  const onChangeStatus = (columnId: string | null) => {
+    if (!columnId) return;
     setCurrentStatus(columnId);
     setTask((current) => ({
       ...current,
       status: columnId,
     }));
+    updateCurrentTask.mutate({
+      taskId: task.id,
+      data: {
+        columnId,
+      },
+    });
+  };
+  const onConfirmDeleteTask = async () => {
+    if (deleteCurrentTask.isPending) return;
+    await deleteCurrentTask.mutate(task.id);
+    closeModalDeleteTask();
   };
   return (
     <>
@@ -131,6 +183,7 @@ function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement 
               input: 'bg-transparent text-black dark:text-white focus:border-purple-primary',
             }}
             rightSection={<HiOutlineChevronDown className="text-purple-primary" />}
+            disabled={updateCurrentTask.isPending}
             onChange={onChangeStatus}
           />
         </Modal.Body>
@@ -138,15 +191,17 @@ function ModalTaskView(props: Readonly<ModalTaskViewProps>): React.ReactElement 
       <ModalEditTask
         onClose={closeModalEditTask}
         opened={modalEditTaskOpened}
-        // item={task}
+        item={task}
+        statusOptions={statusOptions}
       />
       <ModalConfirmation
         type="danger"
-        onConfirm={closeModalDeleteTask}
+        onConfirm={onConfirmDeleteTask}
         title="Delete this task"
-        description={`Are you sure you want to delete the ${'\u2019'}Build settings UI& ${'\u0060'} task and its subtasks? This action cannot be reversed.`}
+        description={`Are you sure you want to delete the "${task.title}" task and its subtasks? This action cannot be reversed.`}
         onClose={closeModalDeleteTask}
         opened={modalDeleteTaskOpened}
+        loading={deleteCurrentTask.isPending}
       />
     </>
   );

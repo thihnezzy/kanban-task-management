@@ -28,23 +28,8 @@ function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElem
   const {
     board, boardId,
   } = useBoard();
-  const queryClient = useQueryClient();
   const { opened, onClose } = props;
-  const addNewTask = useMutation({
-    mutationFn: createTask,
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ['board', boardId],
-      });
-      await queryClient.refetchQueries({
-        queryKey: ['board', boardId],
-      });
-      onClose();
-    },
-    onError: (error) => {
-      console.error(error);
-    },
-  });
+  const queryClient = useQueryClient();
   const statusOptions = useMemo(() => {
     const boardStatuses = board?.columns.map((column) => ({
       value: column.id,
@@ -59,7 +44,6 @@ function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElem
       subtasks: [''],
       status: '',
     },
-
     validate: {
       title: (value: string) => {
         if (value.trim() === '') {
@@ -81,9 +65,25 @@ function ModalAddNewTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElem
       },
     },
   });
+  const addNewTask = useMutation({
+    mutationFn: createTask,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['board', boardId],
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['board', boardId],
+      });
+      form.reset();
+      onClose();
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
   useEffect(() => {
     form.setFieldValue('status', statusOptions[0]?.value);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [statusOptions]);
   return (
     <Modal

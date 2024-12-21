@@ -7,17 +7,22 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HiOutlineX } from 'react-icons/hi';
-import { useNavigate } from 'react-router-dom';
 
-import { createBoard } from '@/services/boardService';
+import { Board } from '@/@types/Board';
+import { Column } from '@/@types/Column';
+import { editBoard } from '@/services/boardService';
 
-// import { createBoard, fetchBoards } from '@/services/boardService';
-
-interface ModalAddNewBoardProps {
+interface ModalEditBoardProps {
   opened: boolean;
   onClose: () => void;
+  board: Board | null;
+}
+
+interface FormValues {
+  title: string;
+  columns: Column[];
 }
 
 const inputClassNames = {
@@ -28,25 +33,12 @@ const inputClassNames = {
   error: 'absolute right-2 top-1/2 transform -translate-y-1/2 pb-1',
 };
 
-function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactElement {
-  const { opened, onClose } = props;
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const createNewBoard = useMutation({
-    mutationFn: createBoard,
-
-    onSuccess: async (data) => {
-      await queryClient.invalidateQueries({
-        queryKey: ['boards'],
-      });
-      navigate(`/${data.id}`);
-      onClose();
-    },
-  });
-  const form = useForm({
+function ModalEditBoard(props: Readonly<ModalEditBoardProps>): React.ReactElement {
+  const { opened, onClose, board } = props;
+  const form = useForm<FormValues>({
     initialValues: {
       title: '',
-      columns: [''],
+      columns: [],
     },
 
     validate: {
@@ -62,14 +54,37 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
         }
         return null;
       },
-      columns: (value: string[]) => {
-        if (value.some((column) => column.trim() === '')) {
+      columns: (value: Column[]) => {
+        if (value.some((column) => column.name.trim() === '')) {
           return 'Can\'t be empty';
         }
         return null;
       },
     },
   });
+  const queryClient = useQueryClient();
+  const editCurrentBoard = useMutation({
+    mutationFn: editBoard,
+
+    onSuccess: async () => {
+      if (!board?.id) return;
+      queryClient.invalidateQueries({
+        queryKey: ['board', board.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['boards'],
+      });
+      form.reset();
+      onClose();
+    },
+  });
+  useEffect(() => {
+    if (board) {
+      form.setFieldValue('title', board.name);
+      form.setFieldValue('columns', board.columns);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [board]);
   return (
     <Modal
       withCloseButton={false}
@@ -82,26 +97,25 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
     >
       <Modal.Header>
         <Title order={2} className="text-xl text-black dark:text-white">
-          Add New Board
+          Edit Board
         </Title>
       </Modal.Header>
       <Modal.Body>
         <form
           className="space-y-4"
           onSubmit={form.onSubmit(async (values) => {
-            if (!form.isValid() || createNewBoard.isPending) return;
-            createNewBoard.mutate({
+            if (!form.isValid() || editCurrentBoard.isPending || !board) return;
+            editCurrentBoard.mutate({
               name: values.title,
               columns: values.columns,
+              boardId: board?.id,
             });
-            form.reset();
-            onClose();
           })}
         >
           <TextInput
             placeholder="e.g Web Design"
             withAsterisk
-            label="Name"
+            label="Board Name"
             className="mt-2"
             classNames={{
               ...inputClassNames,
@@ -113,18 +127,18 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
           />
           <div>
             <Title className="text-sm text-medium-grey dark:text-white mb-1">
-              Columns
+              Board Columns
             </Title>
             <Stack className="max-h-[300px] overflow-y-auto py-2">
               {
-                form.values.columns.map((column: string, index: number) => (
+                form.values.columns.map((column: Column, index: number) => (
                   // eslint-disable-next-line react/no-array-index-key
                   <div className="flex items-center" key={index}>
                     <TextInput
                       placeholder="Column"
-                      value={column}
+                      value={column.name}
                       onChange={(event) => {
-                        form.setFieldValue('columns', form.values.columns.map((value, i) => (i === index ? event.currentTarget.value : value)));
+                        form.setFieldValue('columns', form.values.columns.map((value, i) => (i === index ? { ...value, name: event.currentTarget.value } : value)));
                       }}
                       className="flex-1"
                       classNames={inputClassNames}
@@ -143,7 +157,11 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
               }
               <Button
                 onClick={() => {
-                  form.setFieldValue('columns', [...form.values.columns, '']);
+                  form.setFieldValue('columns', [...form.values.columns, {
+                    name: '',
+                    id: '',
+                    tasks: [],
+                  }]);
                 }}
                 variant="filled"
                 className="text-sm bg-purple-secondary dark:bg-white bg-opacity-10 dark:bg-opacity-100
@@ -158,9 +176,9 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
             type="submit"
             variant="filled"
             className="w-full bg-purple-primary hover:bg-purple-secondary rounded-full duration-100 font-bold text-white text-sm outline-none focus:outline-none"
-            loading={createNewBoard.isPending}
+            loading={editCurrentBoard.isPending}
           >
-            Create New Board
+            Save Changes
           </Button>
         </form>
       </Modal.Body>
@@ -169,4 +187,4 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
   );
 }
 
-export default ModalAddNewBoard;
+export default ModalEditBoard;

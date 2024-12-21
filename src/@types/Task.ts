@@ -8,8 +8,6 @@ export type Task = {
   id: string;
   title: string;
   description: string;
-  // assignee: string;
-  // dueDate: string;
-  status: string;
+  column: string;
   subtasks: SubTask[];
 };

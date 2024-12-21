@@ -6,11 +6,12 @@ interface ModalDeleteBoardProps {
   onClose: () => void;
   onConfirm: () => void;
   boardTitle: string | undefined;
+  loading?: boolean;
 }
 
 function ModalDeleteBoard(props: ModalDeleteBoardProps): React.ReactElement {
   const {
-    boardTitle, onClose, onConfirm, opened,
+    boardTitle, onClose, onConfirm, opened, loading,
   } = props;
   return (
     <Modal
@@ -40,6 +41,7 @@ function ModalDeleteBoard(props: ModalDeleteBoardProps): React.ReactElement {
             className="w-full text-sm bg-red-primary rounded-full duration-100 hover:bg-red-primary hover:bg-opacity-80
                 font-bold text-white"
             onClick={onConfirm}
+            loading={loading}
           >
             Delete
           </Button>

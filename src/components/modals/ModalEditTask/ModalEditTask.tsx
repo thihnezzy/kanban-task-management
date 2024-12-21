@@ -4,19 +4,27 @@ import {
   Modal, Select, Stack, Textarea, TextInput, Title,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import React from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
 import { HiOutlineChevronDown, HiOutlineX } from 'react-icons/hi';
 
+import { SubTask, Task } from '@/@types/Task';
+import { useBoard } from '@/contexts/KanbanContext';
+import { updateTask } from '@/services/boardService';
+
 interface ModalAddNewTaskProps {
+  item: Task;
   opened: boolean;
+  statusOptions: { value: string; label: string }[];
   onClose: () => void;
 }
 
-const statusOptions = [
-  { value: 'Todo', label: 'To Do' },
-  { value: 'Doing', label: 'In Progress' },
-  { value: 'Done', label: 'Done' },
-];
+interface FormValues {
+  title: string;
+  description: string;
+  subtasks: SubTask[];
+  column: string;
+}
 
 const inputClassNames = {
   root: 'relative',
@@ -27,13 +35,28 @@ const inputClassNames = {
 };
 
 function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElement {
-  const { opened, onClose } = props;
-  const form = useForm({
+  const {
+    opened, onClose, item, statusOptions,
+  } = props;
+  const { boardId } = useBoard();
+  const queryClient = useQueryClient();
+  const updateCurrentTask = useMutation({
+    mutationFn: updateTask,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ['board', boardId],
+      });
+    },
+    onError: (error) => {
+      console.error(error);
+    },
+  });
+  const form = useForm<FormValues>({
     initialValues: {
-      title: '',
+      title: item?.title,
       description: '',
-      subtasks: [''],
-      status: 'Todo',
+      subtasks: [],
+      column: item.column,
     },
 
     validate: {
@@ -49,14 +72,26 @@ function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElemen
         }
         return null;
       },
-      subtasks: (value: string[]) => {
-        if (value.some((subtask) => subtask.trim() === '')) {
+      subtasks: (value: SubTask[]) => {
+        if (value.some((subtask) => subtask.title.trim() === '')) {
           return 'Can\'t be empty';
         }
         return null;
       },
     },
   });
+  useEffect(() => {
+    if (item) {
+      form.setValues({
+        title: item.title || '',
+        description: item.description || '',
+        subtasks: item.subtasks || [],
+        column: item.column || '',
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item]);
+
   return (
     <Modal
       withCloseButton={false}
@@ -69,14 +104,23 @@ function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElemen
     >
       <Modal.Header>
         <Title order={2} className="text-xl text-black dark:text-white">
-          Add New Task
+          Edit Task
         </Title>
       </Modal.Header>
       <Modal.Body>
         <form
           className="space-y-4"
           onSubmit={form.onSubmit((values) => {
-            console.log(values);
+            if (!form.isValid() || updateCurrentTask.isPending) return;
+            updateCurrentTask.mutate({
+              taskId: item.id,
+              data: {
+                title: values.title,
+                description: values.description,
+                subtasks: values.subtasks,
+                columnId: values.column,
+              },
+            });
           })}
         >
           <TextInput
@@ -108,14 +152,14 @@ function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElemen
             </Title>
             <Stack className="max-h-[300px] overflow-y-auto py-2">
               {
-                form.values.subtasks.map((subtask: string, index: number) => (
+                form.values.subtasks.map((subtask: SubTask, index: number) => (
                   // eslint-disable-next-line react/no-array-index-key
                   <div className="flex items-center" key={index}>
                     <TextInput
                       placeholder="Subtask"
-                      value={subtask}
+                      value={subtask.title}
                       onChange={(event) => {
-                        form.setFieldValue('subtasks', form.values.subtasks.map((value, i) => (i === index ? event.currentTarget.value : value)));
+                        form.setFieldValue('subtasks', form.values.subtasks.map((value, i) => (i === index ? { ...value, title: event.currentTarget.value } : value)));
                       }}
                       className="flex-1"
                       classNames={inputClassNames}
@@ -134,7 +178,11 @@ function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElemen
               }
               <Button
                 onClick={() => {
-                  form.setFieldValue('subtasks', [...form.values.subtasks, '']);
+                  form.setFieldValue('subtasks', [...form.values.subtasks, {
+                    id: '',
+                    title: '',
+                    isCompleted: false,
+                  }]);
                 }}
                 variant="filled"
                 className="text-sm bg-purple-secondary bg-opacity-10 hover:bg-opacity-25 hover:bg-purple-primary rounded-full duration-100 font-bold text-purple-primary hover:text-purple-primary text-sm"
@@ -145,9 +193,10 @@ function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElemen
           </div>
           <Select
             data={statusOptions}
-            value={form.values.status}
+            value={form.values.column}
             onChange={(value) => {
-              form.setFieldValue('status', value ?? 'Todo');
+              if (!value) return;
+              form.setFieldValue('column', value);
             }}
             label="Status"
             className="mt-2"
@@ -158,8 +207,9 @@ function ModalEditTask(props: Readonly<ModalAddNewTaskProps>): React.ReactElemen
             type="submit"
             variant="filled"
             className="w-full bg-purple-primary hover:bg-purple-secondary rounded-full duration-100 font-bold text-white text-sm"
+            loading={updateCurrentTask.isPending}
           >
-            Create Task
+            Update Task
           </Button>
         </form>
       </Modal.Body>
