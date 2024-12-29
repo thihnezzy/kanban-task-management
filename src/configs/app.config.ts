@@ -1,7 +1,6 @@
 const appConfig = {
-  apiPrefix: '/api',
-  authenticatedEntryPath: '/dashboard/my-recordings',
-  unAuthenticatedEntryPath: '/login',
+  authenticatedEntryPath: '/dashboard',
+  unAuthenticatedEntryPath: '/auth',
 };
 
 export default appConfig;

@@ -43,6 +43,11 @@ module.exports = {
     "@tanstack/query",
   ],
   rules: {
+    "react/jsx-props-no-spreading": ["error", {
+      "html": "ignore" | "enforce",
+      "custom": "ignore" | "enforce",
+      "explicitSpread": "ignore" | "enforce",
+    }],
     "@tanstack/query/exhaustive-deps": "error",
     "@typescript-eslint/no-unused-vars": ["error"],
     "import/order": [

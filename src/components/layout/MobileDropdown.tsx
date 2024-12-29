@@ -10,7 +10,7 @@ import ColorsSchemeToggle from '../ColorsSchemeToggle/ColorsSchemeToggle';
 import BoardLinks from './BoardLinks';
 
 interface MobileDropdownProps {
-  boards: Board[] | null;
+  boards: Board[] | null | undefined;
   id: string | undefined;
   matches: boolean | undefined;
   open: () => void;

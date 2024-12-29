@@ -7,7 +7,7 @@ import clsx from 'clsx';
 import React from 'react';
 import { IoIosEye } from 'react-icons/io';
 
-import { useBoard } from '@/contexts/KanbanContext';
+import useBoard from '@/hooks/useBoard';
 
 import Header from './Header';
 import Navbar from './Navbar';
@@ -19,6 +19,8 @@ function PageContainer({
 }): React.ReactNode {
   const [opened, { toggle }] = useDisclosure();
   const { board, boards, boardId } = useBoard();
+  
+  
 
   const matches = useMediaQuery('(max-width: 475px)');
   return (

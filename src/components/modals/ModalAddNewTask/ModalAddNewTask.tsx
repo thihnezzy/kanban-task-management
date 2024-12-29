@@ -8,7 +8,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useMemo } from 'react';
 import { HiOutlineChevronDown, HiOutlineX } from 'react-icons/hi';
 
-import { useBoard } from '@/contexts/KanbanContext';
+import useBoard from '@/hooks/useBoard';
 import { createTask } from '@/services/boardService';
 
 interface ModalAddNewTaskProps {

@@ -2,18 +2,19 @@ import { Button, Text } from '@mantine/core';
 import clsx from 'clsx';
 import React from 'react';
 import { HiOutlineViewBoards } from 'react-icons/hi';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { Board } from '@/@types/Board';
 
 interface BoardLinksProps {
-  boards: Board[] | undefined;
+  boards: Board[] | undefined | null;
   id: string | undefined;
   open: () => void;
 }
 
 function BoardLinks(props: BoardLinksProps): React.ReactElement {
   const { boards, id, open } = props;
+  const navigate = useNavigate();
   return (
     <>
       <Text className="ml-6 mb-4 text-medium-grey font-bold text-xs tracking-wider">
@@ -26,7 +27,6 @@ function BoardLinks(props: BoardLinksProps): React.ReactElement {
           key={board.id}
           radius={0}
           size="sm"
-          component={Link}
           classNames={{
             inner: 'justify-start',
           }}
@@ -37,7 +37,7 @@ function BoardLinks(props: BoardLinksProps): React.ReactElement {
               'bg-white dark:bg-transparent text-medium-grey hover:bg-opacity-10 hover:text-purple-primary dark:hover:bg-white': id !== board.id,
             },
           )}
-          to={`/${board.id}`}
+          onClick={() => navigate(`/dashboard/${board.id}`)}
           leftSection={(<HiOutlineViewBoards size={16} />)}
         >
           {board.name}

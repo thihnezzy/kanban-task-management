@@ -9,13 +9,14 @@ import { useDisclosure } from '@mantine/hooks';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import React, { memo } from 'react';
 
-import { useBoard } from '@/contexts/KanbanContext';
+import useBoard from '@/hooks/useBoard';
 import { moveTaskToAnotherColumnApi, reorderColumns, reorderTasksInColumn } from '@/services/boardService';
 
 import ModalEditBoard from '../modals/ModalEditBoard/ModalEditBoard';
 
 import Column from './Column';
 import ColumnSkeleton from './ColumnSkeleton';
+import ModalAddNewBoard from '../modals/ModalAddNewBoard/ModalAddNewBoard';
 
 function EmptyState({
   onClickNewColumn,
@@ -65,6 +66,8 @@ function SprintBoard({
 }): React.ReactElement {
   const { board, boardId, isLoadingBoardData } = useBoard();
   const [openedEditBoardModal, { open: openEditBoardModal, close: closeEditBoardModal }] = useDisclosure(false);
+  const [openedAddNewBoardModal, { open: openAddNewBoardModal, close: closeAddNewBoardModal }] = useDisclosure(false);
+  const isEmptyBoard = board && board?.columns.length === 0;
   const queryClient = useQueryClient();
   const reorderTasks = useMutation({
     mutationFn: reorderTasksInColumn,
@@ -134,10 +137,34 @@ function SprintBoard({
       });
     }
   };
+
+  if (!boardId) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center">
+        <Text className="text-medium-grey font-bold text-center">
+          Choose a board to get started
+        </Text>
+        <Text className="text-medium-grey font-bold text-center">
+          or
+        </Text>
+        <Button
+          className="bg-purple-primary hover:bg-purple-secondary rounded-full duration-100 font-bold text-white text-sm"
+          onClick={openAddNewBoardModal}
+        >
+          + Add New Board
+        </Button>
+        <ModalAddNewBoard 
+          opened={openedAddNewBoardModal}
+          onClose={closeAddNewBoardModal}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={className}>
       {
-        board && board.columns.length === 0 && (
+        isEmptyBoard && (
           <EmptyState onClickNewColumn={onClickNewColumn} />
         )
       }
@@ -177,7 +204,7 @@ function SprintBoard({
               ))}
               {dropProvided.placeholder}
               { isLoadingBoardData && <ColumnSkeleton /> }
-              { !isLoadingBoardData && <AddNewColumnPlaceholder onClick={onClickNewColumn} /> }
+              { !isLoadingBoardData && !isEmptyBoard && <AddNewColumnPlaceholder onClick={onClickNewColumn} /> }
             </Box>
           )}
         </Droppable>

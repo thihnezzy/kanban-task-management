@@ -9,7 +9,7 @@ import React, { useEffect } from 'react';
 import { HiOutlineChevronDown, HiOutlineX } from 'react-icons/hi';
 
 import { SubTask, Task } from '@/@types/Task';
-import { useBoard } from '@/contexts/KanbanContext';
+import useBoard from '@/hooks/useBoard';
 import { updateTask } from '@/services/boardService';
 
 interface ModalAddNewTaskProps {

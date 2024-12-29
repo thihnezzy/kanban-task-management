@@ -13,7 +13,7 @@ import logoDark from '@/assets/logo-dark.svg';
 import logoLight from '@/assets/logo-light.svg';
 import logoMobile from '@/assets/logo-mobile.svg';
 import { deleteBoard } from '@/services/boardService';
-import useIsOverflow from '@/useIsOverflow';
+import useIsOverflow from '@/hooks/useIsOverflow';
 
 import MobileDropdown from './MobileDropdown';
 
@@ -24,11 +24,12 @@ const ModalDeleteBoard = React.lazy(() => import('../modals/ModalDeleteBoard/Mod
 
 interface HeaderProps {
   board: Board | null | undefined;
-  boards: Board[] | null;
+  boards: Board[] | null | undefined;
 }
 
 function Header(props: Readonly<HeaderProps>): React.ReactElement {
   const { board, boards } = props;
+  
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [opened, { open: openAddNewTaskModal, close: closeAddNewTaskModal }] = useDisclosure(false);
@@ -59,7 +60,7 @@ function Header(props: Readonly<HeaderProps>): React.ReactElement {
       return logoMobile;
     }
     return colorScheme === 'dark' ? logoLight : logoDark;
-  }, [colorScheme, matches]);
+  }, [colorScheme, matches]);  
   const onConfirmDeleteBoard = async () => {
     if (!board?.id || deleteCurrentBoard.isPending) return;
     deleteCurrentBoard.mutate(board.id);
@@ -78,7 +79,7 @@ function Header(props: Readonly<HeaderProps>): React.ReactElement {
       })}
       >
         <Link
-          to="/"
+          to="/dashboard"
           className="flex items-center"
         >
           <Image
@@ -115,10 +116,10 @@ function Header(props: Readonly<HeaderProps>): React.ReactElement {
         <div className="flex items-center gap-1">
           <Button
             className={clsx('rounded-full bg-purple-primary hover:bg-purple-secondary text-white bg-opacity-90 duration-100 hover:text-white', {
-              'opacity-25': board?.columns.length === 0,
+              'opacity-25': board?.columns.length === 0 || !board,
             })}
             onClick={openAddNewTaskModal}
-            disabled={board?.columns.length === 0}
+            disabled={board?.columns.length === 0 || !board}
           >
             <Text className="hidden sm:inline-block text-sm" fw={700}>+ Add New Task</Text>
             <HiOutlinePlus className="block sm:hidden" />
@@ -128,6 +129,9 @@ function Header(props: Readonly<HeaderProps>): React.ReactElement {
               <ActionIcon
                 variant="transparent"
                 className="rounded-full text-medium-grey"
+                classNames={{
+                  root: !board ? 'hidden' : '',
+                }}
               >
                 <HiOutlineDotsVertical />
               </ActionIcon>

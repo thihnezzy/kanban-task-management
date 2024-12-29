@@ -13,7 +13,7 @@ import React, { useEffect, useMemo } from 'react';
 import { HiOutlineChevronDown } from 'react-icons/hi';
 
 import type { Task } from '@/@types/Task';
-import { useBoard } from '@/contexts/KanbanContext';
+import useBoard from '@/hooks/useBoard';
 import { deleteTask, updateTask } from '@/services/boardService';
 
 import ModalConfirmation from '../ModalConfirmation/ModalConfirmation';

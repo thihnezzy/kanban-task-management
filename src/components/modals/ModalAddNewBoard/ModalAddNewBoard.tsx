@@ -39,7 +39,7 @@ function ModalAddNewBoard(props: Readonly<ModalAddNewBoardProps>): React.ReactEl
       await queryClient.invalidateQueries({
         queryKey: ['boards'],
       });
-      navigate(`/${data.id}`);
+      navigate(`/dashboard/${data.id}`);
       onClose();
     },
   });

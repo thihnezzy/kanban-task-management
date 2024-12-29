@@ -48,6 +48,11 @@ export const updateSubtask = async (subtaskId: string, data: Partial<SubTask>): 
   await axiosInstance.put(`/subtasks/${subtaskId}`, data);
 };
 
+export const getBoards = async (): Promise<Board[]> => {
+  const response = await axiosInstance.get('/boards');
+  return response.data;
+}
+
 export const createBoard = async (data: { name: string, columns: string[] }): Promise<Board> => {
   const response = await axiosInstance.post('/boards', data);
   return response.data;
