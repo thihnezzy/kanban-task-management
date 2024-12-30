@@ -5,7 +5,7 @@ import { HiOutlineChevronDown, HiOutlineChevronUp } from 'react-icons/hi';
 
 import { Board } from '@/@types/Board';
 
-import ColorsSchemeToggle from '../ColorsSchemeToggle/ColorsSchemeToggle';
+import ColorsSchemeToggle from './ColorsSchemeToggle/ColorsSchemeToggle';
 
 import BoardLinks from './BoardLinks';
 

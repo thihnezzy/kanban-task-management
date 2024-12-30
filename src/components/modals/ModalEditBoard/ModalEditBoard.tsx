@@ -166,7 +166,7 @@ function ModalEditBoard(props: Readonly<ModalEditBoardProps>): React.ReactElemen
                 variant="filled"
                 className="text-sm bg-purple-secondary dark:bg-white bg-opacity-10 dark:bg-opacity-100
                 hover:bg-opacity-25 hover:bg-purple-primary rounded-full duration-100
-                font-bold text-purple-primary hover:text-purple-primary"
+                font-bold text-purple-primary hover:text-purple-primary min-h-[40px]"
               >
                 + Add New Column
               </Button>

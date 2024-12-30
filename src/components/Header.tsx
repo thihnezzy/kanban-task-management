@@ -16,11 +16,12 @@ import { deleteBoard } from '@/services/boardService';
 import useIsOverflow from '@/hooks/useIsOverflow';
 
 import MobileDropdown from './MobileDropdown';
+import AccountDropdown from './AccountDropdown';
 
-const ModalAddNewBoard = React.lazy(() => import('../modals/ModalAddNewBoard/ModalAddNewBoard'));
-const ModalAddNewTask = React.lazy(() => import('../modals/ModalAddNewTask/ModalAddNewTask'));
-const ModalEditBoard = React.lazy(() => import('../modals/ModalEditBoard/ModalEditBoard'));
-const ModalDeleteBoard = React.lazy(() => import('../modals/ModalDeleteBoard/ModalDeleteBoard'));
+const ModalAddNewBoard = React.lazy(() => import('./modals/ModalAddNewBoard/ModalAddNewBoard'));
+const ModalAddNewTask = React.lazy(() => import('./modals/ModalAddNewTask/ModalAddNewTask'));
+const ModalEditBoard = React.lazy(() => import('./modals/ModalEditBoard/ModalEditBoard'));
+const ModalDeleteBoard = React.lazy(() => import('./modals/ModalDeleteBoard/ModalDeleteBoard'));
 
 interface HeaderProps {
   board: Board | null | undefined;
@@ -65,9 +66,9 @@ function Header(props: Readonly<HeaderProps>): React.ReactElement {
     if (!board?.id || deleteCurrentBoard.isPending) return;
     deleteCurrentBoard.mutate(board.id);
     if (!boards || boards.length === 0) {
-      navigate('/');
+      navigate('/dashboard');
     } else {
-      navigate(`/${boards[0].id}`);
+      navigate(`/dashboard/${boards[0].id}`);
     }
     closeDeleteModal();
   };
@@ -151,6 +152,7 @@ function Header(props: Readonly<HeaderProps>): React.ReactElement {
               </Menu.Item>
             </Menu.Dropdown>
           </Menu>
+          <AccountDropdown />
         </div>
       </div>
       <Suspense fallback={null}>

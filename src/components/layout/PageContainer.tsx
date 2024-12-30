@@ -9,7 +9,7 @@ import { IoIosEye } from 'react-icons/io';
 
 import useBoard from '@/hooks/useBoard';
 
-import Header from './Header';
+import Header from '../Header';
 import Navbar from './Navbar';
 
 function PageContainer({

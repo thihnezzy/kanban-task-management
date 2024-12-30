@@ -77,10 +77,7 @@ const useAuth = () => {
 
   const logout = async () => {
     try {
-      // Simulate an API call to log out
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-      });
+      setAccessToken(null);
       setUser(null);
     } catch (error) {
       console.error('Failed to log out:', error);

@@ -9,7 +9,7 @@ import type { Board } from '@/@types/Board';
 import ColorsSchemeToggle from '../ColorsSchemeToggle/ColorsSchemeToggle';
 import ModalAddNewBoard from '../modals/ModalAddNewBoard/ModalAddNewBoard';
 
-import BoardLinks from './BoardLinks';
+import BoardLinks from '../BoardLinks';
 
 interface NavbarProps {
   boards: Board[] | undefined;
